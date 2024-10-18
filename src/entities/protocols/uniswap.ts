@@ -20,12 +20,22 @@ import { Trade as V3Trade, Pool, encodeRouteToPath } from '@baseswapfi/v3-sdk2'
 import { Command, RouterTradeType, TradeConfig } from '../Command'
 import { SENDER_AS_RECIPIENT, ROUTER_AS_RECIPIENT, CONTRACT_BALANCE } from '../../utils/constants'
 import { encodeFeeBips } from '../../utils/numbers'
-import { BigNumber } from 'ethers'
+import { BigNumber, BigNumberish } from 'ethers'
+
+export type FlatFeeOptions = {
+  amount: BigNumberish
+  recipient: string
+}
 
 // the existing router permit object doesn't include enough data for permit2
 // so we extend swap options with the permit2 permit
+// when safe mode is enabled, the SDK will add an extra ETH sweep for security
+// when useRouterBalance is enabled the SDK will use the balance in the router for the swap
 export type SwapOptions = Omit<RouterSwapOptions, 'inputTokenPermit'> & {
+  useRouterBalance?: boolean
   inputTokenPermit?: Permit2Permit
+  flatFee?: FlatFeeOptions
+  safeMode?: boolean
 }
 
 const REFUND_ETH_PRICE_IMPACT_THRESHOLD = new Percent(50, 100)
@@ -149,7 +159,7 @@ function addV2Swap<TInput extends Currency, TOutput extends Currency>(
       routerMustCustody ? ROUTER_AS_RECIPIENT : options.recipient,
       trade.maximumAmountIn(options.slippageTolerance).quotient.toString(),
       trade.minimumAmountOut(options.slippageTolerance).quotient.toString(),
-      route.path.map((pool) => pool.address),
+      route.path.map((pool) => pool.wrapped.address),
       payerIsUser,
     ])
   } else if (tradeType == TradeType.EXACT_OUTPUT) {
@@ -157,7 +167,7 @@ function addV2Swap<TInput extends Currency, TOutput extends Currency>(
       routerMustCustody ? ROUTER_AS_RECIPIENT : options.recipient,
       trade.minimumAmountOut(options.slippageTolerance).quotient.toString(),
       trade.maximumAmountIn(options.slippageTolerance).quotient.toString(),
-      route.path.map((pool) => pool.address),
+      route.path.map((pool) => pool.wrapped.address),
       payerIsUser,
     ])
   }
@@ -255,7 +265,7 @@ function addMixedSwap<TInput extends Currency, TOutput extends Currency>(
     const newRoute = new MixedRoute(newRouteOriginal)
 
     /// Previous output is now input
-    inputToken = outputToken
+    inputToken = outputToken.wrapped
 
     const mixedRouteIsAllV3 = (route: MixedRouteSDK<Currency, Currency>) => {
       return route.pools.every((pool) => pool instanceof Pool)
@@ -278,7 +288,7 @@ function addMixedSwap<TInput extends Currency, TOutput extends Currency>(
         isLastSectionInRoute(i) ? tradeRecipient : ROUTER_AS_RECIPIENT, // recipient
         i === 0 ? amountIn : CONTRACT_BALANCE, // amountIn
         !isLastSectionInRoute(i) ? 0 : amountOut, // amountOutMin
-        newRoute.path.map((pool) => pool.address), // path
+        newRoute.path.map((pool) => pool.wrapped.address), // path
         payerIsUser && i === 0,
       ])
     }

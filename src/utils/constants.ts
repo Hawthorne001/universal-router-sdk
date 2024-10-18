@@ -1,5 +1,10 @@
 import { BigNumber } from 'ethers'
 
+export enum UniversalRouterVersion {
+  V1_2 = '1.2',
+  V2_0 = '2.0',
+}
+
 type ChainConfig = {
   router: string
   creationBlock: number
@@ -99,6 +104,24 @@ const CHAIN_CONFIGS: { [key: number]: ChainConfig } = {
     weth: '0x4200000000000000000000000000000000000006',
     creationBlock: 5118970,
   },
+  // mode mainnet
+  [34443]: {
+    router: '0x3A9f10922eEb266f41551641140CF01B461D155c',
+    weth: '0x4200000000000000000000000000000000000006',
+    creationBlock: 3589443,
+  },
+  // soneium testnet
+  [1946]: {
+    router: '0xfb926356BAf861c93C3557D7327Dbe8734A71891',
+    weth: '0x4200000000000000000000000000000000000006',
+    creationBlock: 2738787,
+  },
+  // sonic testnet
+  [64165]: {
+    router: '0xbF79915e80DE0A361A4F35175BA9bF2e91B10424',
+    weth: '0x591E027153ED4e536275984e1b7573367e11dac4',
+    creationBlock: 78546348,
+  },
 }
 
 export const UNIVERSAL_ROUTER_ADDRESS = (chainId: number): string => {
@@ -119,10 +142,9 @@ export const WETH_ADDRESS = (chainId: number): string => {
   return CHAIN_CONFIGS[chainId].weth
 }
 
-export const PERMIT2_ADDRESS = '0x000000000022D473030F116dDEE9F6B43aC78BA3'
-
 export const CONTRACT_BALANCE = BigNumber.from(2).pow(255)
 export const ETH_ADDRESS = '0x0000000000000000000000000000000000000000'
+export const E_ETH_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 export const MAX_UINT256 = BigNumber.from(2).pow(256).sub(1)
 export const MAX_UINT160 = BigNumber.from(2).pow(160).sub(1)
