@@ -35,7 +35,7 @@
     "@uniswap/permit2-sdk": "^1.2.0",
     "@uniswap/universal-router": "1.4.3",
     "bignumber.js": "^9.0.2",
-    "ethers": "^5.3.1"
+    "ethers": "^6.0.0"
   },
   "devDependencies": {
     "@types/chai": "^4.2.18",
